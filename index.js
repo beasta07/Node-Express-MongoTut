@@ -1,6 +1,7 @@
 const fs = require("fs");
 const http = require("http");
 const url = require("url");
+const replaceTemplate= require('./modules/replaceTemplate');
 ////////FILES
 // const textIn=fs.readFileSync('./txt/input.txt','utf-8')
 // console.log(textIn);
@@ -28,21 +29,48 @@ const url = require("url");
 
 /////////////////////SERVER
 
-const data = fs.readFileSync(
-  `${__dirname}/dev-data/data.json`,
+const templateOverview = fs.readFileSync(
+  `${__dirname}/templates/template-overview.html`,
   "utf-8",
   (err, data) => {
-    const dataObj = JSON.parse(data);
-  }
+console.log("No template overview page",err)  }
+);
+const tempCard = fs.readFileSync(
+  `${__dirname}/templates/template-card.html`,
+  "utf-8",
+  (err, data) => {
+    console.log("No template cA RD overview page",err)  }
+  
+);
+const tempProduct = fs.readFileSync(
+  `${__dirname}/templates/template-product.html`,
+  "utf-8",
+  (err, data) => {
+    console.log("No template cARD overview page",err)  }
+  
 );
 
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, "utf-8");
+const dataObj = JSON.parse(data);
 const server = http.createServer((req, res) => {
-  const pathName = req.url;
-  if (pathName === "/overview") {
-    res.end("This is the overvoew");
-  } else if (pathName === "/product") {
-    res.end("This is the PRODUCT");
-  } else if (pathName === "/api") {
+
+const {query,pathname} =url.parse(req.url, true)
+console.log(query,pathname)
+  //Overview
+  if (pathname === "/overview") {
+   const cardsHtml= dataObj.map(el => replaceTemplate(tempCard, el)).join('')
+
+   const output = templateOverview.replace('{%PRODUCT_CARDS%}',cardsHtml)
+    res.end(output);
+  //Product
+  } else if (pathname === "/product") {
+    const product= dataObj[query.id]
+    const output = replaceTemplate(tempProduct, product)
+    console.log(query)
+    res.end(output);
+
+  //API
+  } else if (pathname === "/api") {
     res.end(data);
   } else {
     res.writeHead(404, {
